@@ -1,0 +1,18 @@
+// [START declaration]
+syntax = "proto3";
+package simple;
+// [END declaration]
+
+// [START messages]
+message SimpleMessage {
+  enum MsgMode {
+    MESSAGE = 0;
+    FILE = 1;
+    KEY = 2;
+  }
+
+  MsgMode mode = 1;
+
+  bytes data = 2;
+}
+// [END messages]
