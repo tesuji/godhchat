@@ -64,9 +64,18 @@ func ChatClientStart(ip string, port int) {
 	)
 
 	key := keyExchangeClient(r, w)
+	donothing(key)
+}
+
+func communicate(conn net.Conn) {
+	var (
+		r = bufio.NewReader(conn)
+		w = bufio.NewWriter(conn)
+	)
+
+	key := keyExchangeClient(r, w)
 	hashsum := sha256.Sum256(key.Bytes())
 	cip := aescrypt.NewAESCipher(hashsum)
-	donothing(cip)
 
 	chCon := make(chan string)
 	chSer := make(chan string)
@@ -77,13 +86,15 @@ IOLoop:
 		select {
 		case text := <-chCon:
 			log.Print("Sent:", text)
-			fmt.Fprint(conn, text)
+			// fmt.Fprint(conn, text)
+			cip.SendSocket(conn, text)
 			fmt.Print("<<< ")
 		case msg, ok := <-chSer:
 			if !ok {
 				break IOLoop
 			} else {
-				fmt.Print(">>> ", msg)
+				plain, _ := cip.Decrypt([]byte(msg))
+				fmt.Print(">>> ", plain)
 				fmt.Print("<<< ")
 			}
 		case <-time.After(30 * time.Second):

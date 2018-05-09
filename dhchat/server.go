@@ -2,13 +2,11 @@ package dhchat
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"math/big"
 	"net"
 	"strconv"
 	"strings"
-	"time"
 
 	// pb "github.com/lzutao/godiffhellchat/simple"
 
@@ -114,32 +112,4 @@ func handleRequest(conn net.Conn) {
 
 	key := keyExchangeServer(r, w)
 	donothing(key)
-	w.WriteString("Welcome to the Diffie-Hellman chat server.\n")
-	w.Flush()
-
-	chCon := make(chan string)
-	chSer := make(chan string)
-	go clientReadConsole(chCon)
-	go clientReadServer(r, chSer)
-
-IOLoop:
-	for {
-		select {
-		case text := <-chCon:
-			log.Print("Sent:", text)
-			fmt.Fprint(conn, text)
-			fmt.Print("<<< ")
-		case msg, ok := <-chSer:
-			if !ok {
-				break IOLoop
-			} else {
-				fmt.Print(">>> ", msg)
-				fmt.Print("<<< ")
-			}
-		case <-time.After(30 * time.Second):
-			// Do something when there is nothing read from stdin
-			fmt.Println("You're too slow.")
-			return
-		}
-	}
 }

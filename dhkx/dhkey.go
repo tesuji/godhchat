@@ -6,24 +6,26 @@
 //     GetMODPGroup()
 //     SharedSecretKey()
 //
-// Example:
-// 	  a := dhkx.NewDHKey(0)
-// 	  b := dhkx.NewDHKey(0)
-//
-// 	  ga := a.PublicKey()
-// 	  gb := b.PublicKey()
-//
-// 	  gab := a.SharedSecretKey(gb)
-// 	  gba := b.SharedSecretKey(ga)
-//
-// 	  if gab.Cmp(gba) == 0 {
-// 	      fmt.Println("Shared keys match.")
-// 	      fmt.Printf("Key: %v\n", gab)
-// 	  } else {
-// 	      fmt.Println("Shared secrets didn't match!")
-// 	      fmt.Println("Shared secret A: ", gab)
-// 	      fmt.Println("Shared secret B: ", gba)
-// 	  }
+/*
+Example:
+a := dhkx.NewDHKey(0)
+b := dhkx.NewDHKey(0)
+
+ga := a.PublicKey()
+gb := b.PublicKey()
+
+gab := a.SharedSecretKey(gb)
+gba := b.SharedSecretKey(ga)
+
+if gab.Cmp(gba) == 0 {
+    fmt.Println("Shared keys match.")
+    fmt.Printf("Key: %v\n", gab)
+} else {
+    fmt.Println("Shared secrets didn't match!")
+    fmt.Println("Shared secret A: ", gab)
+    fmt.Println("Shared secret B: ", gba)
+}
+*/
 // >>> Written by 15520599
 package dhkx
 

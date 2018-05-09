@@ -1,6 +1,17 @@
 // Package aescrypt implements an easy way to interact with aes cipher
 package aescrypt
 
+/*
+
+func main() {
+	key := []byte("LKHlhb899Y09olUi")
+	encryptMsg, _ := encrypt(key, "Hello World")
+	msg, _ := decrypt(key, encryptMsg)
+	fmt.Println(msg) // Hello World
+}
+
+*/
+
 // Ref https://gist.github.com/stupidbodo/601b68bfef3449d1b8d9
 // or https://gist.github.com/manishtpatel/8222606
 import (
@@ -10,7 +21,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
+	"net"
 )
 
 // AESCipher is an struct to interact with aes cipher
@@ -35,7 +48,7 @@ func (cip *AESCipher) pad(src []byte) []byte {
 }
 
 // unpad is the PKCS7 unpad
-func (cip *AESCipher) unpad(src []byte) ([]byte, error) {
+func (cip *AESCipher) unpad(src []byte) (b []byte, err error) {
 	length := len(src)
 	unpadding := int(src[length-1])
 
@@ -50,7 +63,8 @@ func (cip *AESCipher) unpad(src []byte) ([]byte, error) {
 }
 
 // Encrypt is an encryption using AES in CBC mode.
-func (cip *AESCipher) Encrypt(text string) ([]byte, error) {
+// Result will be encoded in base64
+func (cip *AESCipher) Encrypt(text string) (b []byte, err error) {
 	block, err := aes.NewCipher(cip.key[:])
 	if err != nil {
 		return nil, err
@@ -73,7 +87,7 @@ func (cip *AESCipher) Encrypt(text string) ([]byte, error) {
 }
 
 // Decrypt using AES in CBC mode. Expects the IV at the front of the string.
-func (cip *AESCipher) Decrypt(text []byte) (string, error) {
+func (cip *AESCipher) Decrypt(text []byte) (s string, err error) {
 	ciphertext := make([]byte, 4096)
 	if _, err := base64.URLEncoding.Decode(ciphertext, text); err != nil {
 		return "", err
@@ -103,9 +117,11 @@ func (cip *AESCipher) Decrypt(text []byte) (string, error) {
 	return string(result), nil
 }
 
-// func main() {
-// 	key := []byte("LKHlhb899Y09olUi")
-// 	encryptMsg, _ := encrypt(key, "Hello World")
-// 	msg, _ := decrypt(key, encryptMsg)
-// 	fmt.Println(msg) // Hello World
-// }
+// SendSocket encrypts `text` and sends it through a socket
+func (cip *AESCipher) SendSocket(conn net.Conn, text string) (n int, err error) {
+	b, err := cip.Encrypt(text)
+	if err != nil {
+		return 0, err
+	}
+	return fmt.Fprint(conn, b)
+}
