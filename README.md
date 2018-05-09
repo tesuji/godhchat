@@ -9,7 +9,7 @@ If you want Windows Cross Compiling, run on Linux:
 GOOS=windows GOARCH=386 go build
 ```
 
-If you want to use [Protocol Buffer][https://developers.google.com/protocol-buffers/docs/gotutorial] (currently not used)
+If you want to use [Protocol Buffer](https://developers.google.com/protocol-buffers/docs/gotutorial) (currently not used)
 ```bash
 go get -u github.com/golang/protobuf/protoc-gen-go
 export PATH=$PATH:$GOPATH/bin
@@ -54,7 +54,7 @@ Replace `localhost` with server IP address if server did not run on local. Again
 
 Server side:
 ```bash
- ./godhchat --listen
+$ ./godhchat --listen
 Listenning on port: 6001
 Connection from 127.0.0.1:56642
 >>> asdf
@@ -63,7 +63,7 @@ Connection from 127.0.0.1:56642
 
 Client side:
 ```bash
- ./godhchat --host localhost
+$ ./godhchat --host localhost
 asdf
 <<< good man
 <<< >>> ok
@@ -80,6 +80,9 @@ Decode it:
 $ echo -n 'UspNgg3ccUFF9SzYvcKJRumWyXJ49h-4oi8uR1lVk_GCOMTVoi2gXoJtT3tMvrM0' | base64 -d
 base64: invalid input
 ```
+
+## Known issues
+- <kbd>Ctrl</kbd><kbd>D</kbd> hangs the program.
 
 ## License
 Released under [MIT License](LICENSE)
