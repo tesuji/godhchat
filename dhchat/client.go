@@ -20,16 +20,17 @@ func donothing(t interface{}) {
 	return
 }
 
-func keyExchangeClient(r *bufio.Reader, w *bufio.Writer) *big.Int {
-	src, err := r.ReadString('\n')
+func keyExchangeClient(conn net.Conn) *big.Int {
+	var src string
+	_, err := fmt.Fscanln(conn, &src)
 	if err != nil {
 		return perror(err)
 	}
 
-	src = src[:len(src)-1]
+	src = strings.TrimSuffix(src, "\n")
 	gb, ok := new(big.Int).SetString(src, 10)
 	if !ok {
-		log.Println("Not good")
+		log.Println("Cannot convert string to big.Int")
 		return nil
 	}
 	log.Println("gb:", gb)
@@ -38,10 +39,10 @@ func keyExchangeClient(r *bufio.Reader, w *bufio.Writer) *big.Int {
 	ga := a.PublicKey()
 	log.Println("ga:", ga)
 
-	if _, err := w.WriteString(ga.String() + "\n"); err != nil {
+	_, err = fmt.Fprintln(conn, ga.String())
+	if err != nil {
 		return perror(err)
 	}
-	w.Flush()
 
 	key, _ := a.SharedSecretKey(gb)
 	log.Println("key:", key)
@@ -58,43 +59,40 @@ func ChatClientStart(ip string, port int) {
 
 	defer conn.Close()
 
-	var (
-		r = bufio.NewReader(conn)
-		w = bufio.NewWriter(conn)
-	)
-
-	key := keyExchangeClient(r, w)
-	donothing(key)
+	key := keyExchangeClient(conn)
+	communicate(conn, key)
 }
 
-func communicate(conn net.Conn) {
-	var (
-		r = bufio.NewReader(conn)
-		w = bufio.NewWriter(conn)
-	)
-
-	key := keyExchangeClient(r, w)
+func communicate(conn net.Conn, key *big.Int) {
 	hashsum := sha256.Sum256(key.Bytes())
 	cip := aescrypt.NewAESCipher(hashsum)
 
 	chCon := make(chan string)
-	chSer := make(chan string)
-	go clientReadConsole(chCon)
-	go clientReadServer(r, chSer)
+	chRmt := make(chan string)
+	go readConsole(chCon)
+	go readRemote(conn, chRmt)
 IOLoop:
 	for {
 		select {
 		case text := <-chCon:
 			log.Print("Sent:", text)
 			// fmt.Fprint(conn, text)
-			cip.SendSocket(conn, text)
+			_, err := cip.SendSocket(conn, text)
+
+			if err != nil {
+				perror(err)
+			}
+
 			fmt.Print("<<< ")
-		case msg, ok := <-chSer:
+		case msg, ok := <-chRmt:
 			if !ok {
 				break IOLoop
 			} else {
-				plain, _ := cip.Decrypt([]byte(msg))
-				fmt.Print(">>> ", plain)
+				s, err := cip.Decrypt(msg)
+				if err != nil {
+					perror(err)
+				}
+				fmt.Print(">>> ", s)
 				fmt.Print("<<< ")
 			}
 		case <-time.After(30 * time.Second):
@@ -105,7 +103,7 @@ IOLoop:
 	}
 }
 
-func clientReadConsole(ch chan string) {
+func readConsole(ch chan string) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		text, err := reader.ReadString('\n')
@@ -117,9 +115,10 @@ func clientReadConsole(ch chan string) {
 	}
 }
 
-func clientReadServer(reader *bufio.Reader, ch chan string) {
+func readRemote(conn net.Conn, ch chan string) {
 	for {
-		text, err := reader.ReadString('\n')
+		var text string
+		_, err := fmt.Fscanln(conn, &text)
 		if err != nil {
 			close(ch)
 			return

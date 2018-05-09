@@ -64,10 +64,10 @@ func (cip *AESCipher) unpad(src []byte) (b []byte, err error) {
 
 // Encrypt is an encryption using AES in CBC mode.
 // Result will be encoded in base64
-func (cip *AESCipher) Encrypt(text string) (b []byte, err error) {
+func (cip *AESCipher) Encrypt(text string) (s string, err error) {
 	block, err := aes.NewCipher(cip.key[:])
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	msg := cip.pad([]byte(text))
@@ -75,21 +75,20 @@ func (cip *AESCipher) Encrypt(text string) (b []byte, err error) {
 	ciphertext := make([]byte, aes.BlockSize+len(msg))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], msg)
 
-	dst := make([]byte, 4096)
-	base64.URLEncoding.Encode(dst, ciphertext)
+	dst := base64.URLEncoding.EncodeToString(ciphertext)
 	return dst, nil
 }
 
 // Decrypt using AES in CBC mode. Expects the IV at the front of the string.
-func (cip *AESCipher) Decrypt(text []byte) (s string, err error) {
-	ciphertext := make([]byte, 4096)
-	if _, err := base64.URLEncoding.Decode(ciphertext, text); err != nil {
+func (cip *AESCipher) Decrypt(text string) (s string, err error) {
+	ciphertext, err := base64.URLEncoding.DecodeString(text)
+	if err != nil {
 		return "", err
 	}
 
@@ -123,5 +122,5 @@ func (cip *AESCipher) SendSocket(conn net.Conn, text string) (n int, err error) 
 	if err != nil {
 		return 0, err
 	}
-	return fmt.Fprint(conn, b)
+	return fmt.Fprintln(conn, b)
 }

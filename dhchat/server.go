@@ -1,7 +1,7 @@
 package dhchat
 
 import (
-	"bufio"
+	"fmt"
 	"log"
 	"math/big"
 	"net"
@@ -17,11 +17,6 @@ const (
 	// BUFSIZE is default buffersize
 	BUFSIZE = 4096
 )
-
-func perror(err error) *big.Int {
-	log.Println(err)
-	return nil
-}
 
 // ChatServerStart implements method to communication to the chat client.
 func ChatServerStart(port int) {
@@ -69,25 +64,32 @@ func containsByte(s []byte, e byte) bool {
 	return false
 }
 
-func keyExchangeServer(r *bufio.Reader, w *bufio.Writer) *big.Int {
+func perror(err error) *big.Int {
+	log.Println(err)
+	return nil
+}
+
+func keyExchangeServer(conn net.Conn) *big.Int {
 	a, _ := dhkx.NewDHKey(0)
 	ga := a.PublicKey()
 	log.Println("ga:", ga)
 
-	if _, err := w.WriteString(ga.String() + "\n"); err != nil {
-		return perror(err)
-	}
-	w.Flush()
-
-	src, err := r.ReadString('\n')
+	_, err := fmt.Fprintln(conn, ga.String())
 	if err != nil {
 		return perror(err)
 	}
 
-	src = src[:len(src)-1]
+	var src string
+	_, err = fmt.Fscanln(conn, &src)
+	if err != nil {
+		return perror(err)
+	}
+
+	src = strings.TrimSuffix(src, "\n")
+
 	gb, ok := new(big.Int).SetString(src, 10)
 	if !ok {
-		log.Println("Not good")
+		log.Println("Cannot convert string to big.Int")
 		return nil
 	}
 	log.Println("gb:", gb)
@@ -105,11 +107,6 @@ func handleRequest(conn net.Conn) {
 	}()
 	log.Println("Connection from", conn.RemoteAddr())
 
-	var (
-		r = bufio.NewReader(conn)
-		w = bufio.NewWriter(conn)
-	)
-
-	key := keyExchangeServer(r, w)
-	donothing(key)
+	key := keyExchangeServer(conn)
+	communicate(conn, key)
 }
