@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	// pb "github.com/lzutao/godiffhellchat/simple"
+	// pb "github.com/lzutao/godhchat/simple"
 
-	"github.com/lzutao/godiffhellchat/dhkx"
+	"github.com/lzutao/godhchat/dhkx"
 )
 
 const (
@@ -32,7 +32,7 @@ func ChatServerStart(port int) {
 		log.Println("Listener closed")
 	}()
 
-	log.Printf("Listenning on port: %d\n", port)
+	fmt.Printf("Listenning on port: %d\n", port)
 
 	for {
 		conn, err := listener.Accept()
@@ -45,30 +45,13 @@ func ChatServerStart(port int) {
 
 }
 
-// p := &pb.SimpleMessage {
-// 	Mode: pb.SimpleMessage_KEY
-// 	Data: ga.Bytes()
-// }
-
-// data, err := proto.Marshal(p)
-// if err != nil {
-// 	log.Fatalln("unmarshaling error:", err)
-// }
-
-func containsByte(s []byte, e byte) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
+// perror prints error strings in err and return nothing
 func perror(err error) *big.Int {
 	log.Println(err)
 	return nil
 }
 
+// keyExchangeServer exchanges Diffie-Hellman key with keyExchangeClient
 func keyExchangeServer(conn net.Conn) *big.Int {
 	a, _ := dhkx.NewDHKey(0)
 	ga := a.PublicKey()
@@ -103,9 +86,9 @@ func keyExchangeServer(conn net.Conn) *big.Int {
 func handleRequest(conn net.Conn) {
 	defer func() {
 		conn.Close()
-		log.Println("Closing connection from", conn.RemoteAddr())
+		fmt.Println("Closing connection from", conn.RemoteAddr())
 	}()
-	log.Println("Connection from", conn.RemoteAddr())
+	fmt.Println("Connection from", conn.RemoteAddr())
 
 	key := keyExchangeServer(conn)
 	communicate(conn, key)

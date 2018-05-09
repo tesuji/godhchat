@@ -3,16 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	//"io/ioutil"
-
+	"io/ioutil"
+	"log"
 	"os"
 
-	"github.com/lzutao/godiffhellchat/dhchat"
+	"github.com/lzutao/godhchat/dhchat"
 )
 
 func init() {
-	// disable log all
-	//log.SetOutput(ioutil.Discard)
+	// disable all log
+	log.SetOutput(ioutil.Discard)
 }
 
 func usage() {
@@ -44,7 +44,8 @@ func main() {
 	} else if hostIP != "" {
 		dhchat.ChatClientStart(hostIP, int(portNumber))
 	} else {
-		fmt.Println(portNumber)
+		fmt.Println("Choose --listen or --host to continue.")
+		flag.PrintDefaults()
 	}
 
 }

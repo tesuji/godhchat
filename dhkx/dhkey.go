@@ -123,13 +123,6 @@ func (key *DHKey) Bytes() []byte {
 	if key.ga == nil {
 		return nil
 	}
-	// if key.group != nil {
-	// 	// len = ceil(bitLen(y) / 8)
-	// 	blen := (key.group.p.BitLen() + 7) / 8
-	// 	ret := make([]byte, blen)
-	// 	copyWithLeftPad(ret, key.ga.Bytes())
-	// 	return ret
-	// }
 	return key.ga.Bytes()
 }
 

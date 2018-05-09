@@ -12,14 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lzutao/godiffhellchat/aescrypt"
-	"github.com/lzutao/godiffhellchat/dhkx"
+	"github.com/lzutao/godhchat/aescrypt"
+	"github.com/lzutao/godhchat/dhkx"
 )
 
-func donothing(t interface{}) {
-	return
-}
-
+// keyExchangeClient exchanges Diffie-Hellman key with keyExchangeServer
 func keyExchangeClient(conn net.Conn) *big.Int {
 	var src string
 	_, err := fmt.Fscanln(conn, &src)
@@ -63,6 +60,8 @@ func ChatClientStart(ip string, port int) {
 	communicate(conn, key)
 }
 
+// communicate starts communications between client and server
+// after recv shared secret key
 func communicate(conn net.Conn, key *big.Int) {
 	hashsum := sha256.Sum256(key.Bytes())
 	cip := aescrypt.NewAESCipher(hashsum)
@@ -76,7 +75,6 @@ IOLoop:
 		select {
 		case text := <-chCon:
 			log.Print("Sent:", text)
-			// fmt.Fprint(conn, text)
 			_, err := cip.SendSocket(conn, text)
 
 			if err != nil {
@@ -96,13 +94,13 @@ IOLoop:
 				fmt.Print("<<< ")
 			}
 		case <-time.After(30 * time.Second):
-			// Do something when there is nothing read from stdin
 			fmt.Println("You're too slow.")
 			return
 		}
 	}
 }
 
+// readConsole reads lines from keyboard and return them
 func readConsole(ch chan string) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -115,6 +113,7 @@ func readConsole(ch chan string) {
 	}
 }
 
+// readRemote reads lines other remote party and return them
 func readRemote(conn net.Conn, ch chan string) {
 	for {
 		var text string

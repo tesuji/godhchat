@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/lzutao/godiffhellchat/dhkx"
+	"github.com/lzutao/godhchat/dhkx"
 )
 
 func TestAll(t *testing.T) {
