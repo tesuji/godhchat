@@ -20,9 +20,8 @@ const (
 
 // ChatServerStart implements method to communication to the chat client.
 func ChatServerStart(port int) {
-	addr := strings.Join([]string{"localhost", strconv.Itoa(port)}, ":")
 	// listen on all interfaces
-	listener, err := net.Listen("tcp", addr)
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatalf("Socket listen port %d failed: %s", port, err.Error())
 	}
